@@ -1,4 +1,3 @@
-# Arquivo: .github/workflows/ci_cd.yml
 name: CI/CD - Docker Build and Push
 
 # Executa este workflow toda vez que houver push para a branch 'main'
@@ -32,16 +31,9 @@ jobs:
         poetry install --sync
 
     - name: 🔍 Executar Linting com Ruff
-      # A falha no Ruff impede o build do Docker, garantindo a qualidade.
-      run: poetry run ruff check src --fix --exit-code 0
-
-
-    - name: 🚨 Verificar Alterações Pós-Correção (Importante)
-      # Verifica se a correção automática do Ruff criou arquivos novos/alterados
-      id: diff
-      run: |
-        git diff --exit-code || (echo "🚨 Arquivos alterados/corrigidos pelo linter. Falhando CI/CD para exigir um novo commit." && exit 1)
-
+      # Esta é a versão limpa e correta. 
+      # Como já corrigimos o código localmente, o check deve passar sem problemas.
+      run: poetry run ruff check src
 
     # ------------------
     # Fase de Docker e Deploy
