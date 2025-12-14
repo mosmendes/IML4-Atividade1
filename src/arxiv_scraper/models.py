@@ -1,6 +1,8 @@
 # Arquivo: src/arxiv_scraper/models.py
-from pydantic import BaseModel, HttpUrl
 from typing import List
+
+from pydantic import BaseModel, HttpUrl
+
 
 class Article(BaseModel):
     """

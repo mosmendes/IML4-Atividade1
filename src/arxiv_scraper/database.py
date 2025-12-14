@@ -1,4 +1,3 @@
-# Arquivo: src/arxiv_scraper/database.py
 import duckdb
 from typing import List
 from pathlib import Path
@@ -35,7 +34,10 @@ class DuckDBManager:
         """)
 
     def insert_articles(self, articles: List[Article]):
-        """Insere uma lista de artigos no banco de dados, ignorando duplicatas existentes."""
+        """
+        Insere uma lista de artigos no banco de dados,
+        ignorando duplicatas existentes.
+        """
         if not articles:
             print("Nenhum artigo para inserir.")
             return

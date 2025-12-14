@@ -1,7 +1,8 @@
 # Arquivo: src/arxiv_scraper/config.py
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
 from pathlib import Path
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Definições de caminhos absolutos
 BASE_DIR = Path(__file__).parent.parent.parent

@@ -1,4 +1,3 @@
-# Arquivo: src/arxiv_scraper/scraper.py
 import requests
 from bs4 import BeautifulSoup
 from typing import List
@@ -12,7 +11,7 @@ from .database import DuckDBManager
 
 def parse_arxiv_article(dt_tag: BeautifulSoup, dd_tag: BeautifulSoup) -> Article:
     """
-    Extrai os dados de um par <dt> (ID) e <dd> (Detalhes) da lista do Arxiv 
+    Extrai os dados de um par <dt> (ID) e <dd> (Detalhes) da lista do Arxiv
     e retorna um objeto Article validado pelo Pydantic.
     """
     
@@ -36,7 +35,9 @@ def parse_arxiv_article(dt_tag: BeautifulSoup, dd_tag: BeautifulSoup) -> Article
     
     # 4. Extração de Sujeitos e Data de Submissão
     # O Arxiv agrupa sujeitos e a data de submissão na mesma linha.
-    subjects_line = dd_tag.find('div', class_='list-subjects').text.replace('Subjects: ', '').strip()
+    subjects_line = (
+        dd_tag.find('div', class_='list-subjects').text.replace('Subjects: ', '').strip()
+    )
     
     # A data de submissão está no final da linha e é separada por '[Submitted ...]'
     submission_date = subjects_line.split(' [Submitted ')[-1].replace(']', '')
@@ -59,7 +60,10 @@ def parse_arxiv_article(dt_tag: BeautifulSoup, dd_tag: BeautifulSoup) -> Article
 
 
 def scrape_arxiv(url: str) -> List[Article]:
-    """Realiza o scraping da página do Arxiv e retorna uma lista de objetos Article validados."""
+    """
+    Realiza o scraping da página do Arxiv e retorna
+    uma lista de objetos Article validados.
+    """
     print(f"🌐 Iniciando scraping da URL: {url}")
     
     try:
@@ -85,18 +89,20 @@ def scrape_arxiv(url: str) -> List[Article]:
     dd_tags = dl_list.find_all('dd')
     
     if len(dt_tags) != len(dd_tags):
-        print("Aviso: Número de tags <dt> e <dd> não corresponde. Os dados podem estar incompletos.")
+        print("Aviso: Número de tags <dt> e <dd> não corresponde. "
+              "Os dados podem estar incompletos.")
 
     articles: List[Article] = []
     
     # 3. Extração e Validação em Loop
-    for dt, dd in zip(dt_tags, dd_tags):
+    for dt, dd in zip(dt_tags, dd_tags, strict=True): # Corrigido B905
         try:
             # Chama a função de parsing e validação Pydantic
             article = parse_arxiv_article(dt, dd)
             articles.append(article)
         except Exception as e:
-            # Tratamento de erro específico para uma linha, permitindo que o loop continue
+            # Tratamento de erro específico para uma linha,
+            # permitindo que o loop continue
             print(f"⚠️ Erro ao parsear um artigo: {e}")
             continue
 

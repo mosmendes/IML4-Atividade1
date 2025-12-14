@@ -33,7 +33,15 @@ jobs:
 
     - name: 🔍 Executar Linting com Ruff
       # A falha no Ruff impede o build do Docker, garantindo a qualidade.
-      run: poetry run ruff check src
+      run: poetry run ruff check src --fix --exit-code 0
+
+
+    - name: 🚨 Verificar Alterações Pós-Correção (Importante)
+      # Verifica se a correção automática do Ruff criou arquivos novos/alterados
+      id: diff
+      run: |
+        git diff --exit-code || (echo "🚨 Arquivos alterados/corrigidos pelo linter. Falhando CI/CD para exigir um novo commit." && exit 1)
+
 
     # ------------------
     # Fase de Docker e Deploy
