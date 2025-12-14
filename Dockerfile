@@ -4,9 +4,6 @@ FROM python:3.11-slim AS builder
 # Define o diretório de trabalho dentro da imagem
 WORKDIR /app
 
-# COPIAMOS AGORA O README.MD (Correção para o erro 1.5.24)
-COPY README.md ./
-
 # Copia os arquivos de configuração do Poetry para o ambiente de build
 COPY pyproject.toml poetry.lock ./
 
@@ -17,7 +14,8 @@ RUN pip install poetry
 RUN poetry config virtualenvs.create false
 
 # Instala as dependências de produção
-RUN poetry install --only main
+# CORREÇÃO: Usamos --no-root para ignorar a verificação de README.md
+RUN poetry install --only main --no-root 
 
 # Estágio 2: Produção (Runtime)
 FROM python:3.11-slim AS runtime
