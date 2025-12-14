@@ -72,7 +72,7 @@ class DuckDBManager:
             # Execução em massa para melhor performance
             self.conn.executemany(query, data_to_insert)
             self.conn.commit()
-            print(f"✅ Inseridos/atualizados {self.conn.row_count} novos artigos.")
+            print(f"✅ Inseridos/atualizados {self.conn.rowcount} novos artigos.")
         except Exception as e:
             print(f"❌ Erro ao inserir dados: {e}")
             self.conn.rollback()
