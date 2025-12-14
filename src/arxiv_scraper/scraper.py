@@ -1,12 +1,14 @@
-import requests
-from bs4 import BeautifulSoup
 from typing import List
 from urllib.parse import urljoin
 
-# Importações internas
-from .models import Article
+import requests
+from bs4 import BeautifulSoup
+
 from .config import settings
 from .database import DuckDBManager
+
+# Importações internas
+from .models import Article
 
 
 def parse_arxiv_article(dt_tag: BeautifulSoup, dd_tag: BeautifulSoup) -> Article:
@@ -14,12 +16,12 @@ def parse_arxiv_article(dt_tag: BeautifulSoup, dd_tag: BeautifulSoup) -> Article
     Extrai os dados de um par <dt> (ID) e <dd> (Detalhes) da lista do Arxiv
     e retorna um objeto Article validado pelo Pydantic.
     """
-    
+
     # 1. Extração do ID e Link
     # O ID completo está no texto do link 'Abstract'
     arxiv_id_full = dt_tag.find('a', title='Abstract').text.strip()
     arxiv_id = arxiv_id_full.split(':')[-1] # Ex: "2312.06733"
-    
+
     # Constrói o link absoluto
     relative_link = dt_tag.find('a', title='Abstract')['href']
     absolute_link = urljoin("https://arxiv.org/", relative_link)
@@ -32,13 +34,14 @@ def parse_arxiv_article(dt_tag: BeautifulSoup, dd_tag: BeautifulSoup) -> Article
     # Os autores são links <a> dentro da div 'list-authors'
     author_tags = dd_tag.find('div', class_='list-authors').find_all('a')
     authors = [tag.text.strip() for tag in author_tags]
-    
+
     # 4. Extração de Sujeitos e Data de Submissão
     # O Arxiv agrupa sujeitos e a data de submissão na mesma linha.
     subjects_line = (
-        dd_tag.find('div', class_='list-subjects').text.replace('Subjects: ', '').strip()
+        dd_tag.find('div', class_='list-subjects')
+              .text.replace('Subjects: ', '').strip() # Quebramos a linha aqui
     )
-    
+
     # A data de submissão está no final da linha e é separada por '[Submitted ...]'
     submission_date = subjects_line.split(' [Submitted ')[-1].replace(']', '')
     subjects = subjects_line.split(' [Submitted ')[0].strip()
@@ -65,7 +68,7 @@ def scrape_arxiv(url: str) -> List[Article]:
     uma lista de objetos Article validados.
     """
     print(f"🌐 Iniciando scraping da URL: {url}")
-    
+
     try:
         # 1. Requisição: Timeout definido para boas práticas
         response = requests.get(url, timeout=15)
@@ -76,10 +79,10 @@ def scrape_arxiv(url: str) -> List[Article]:
 
     # 2. Parsing: Usa o 'html.parser' que é nativo e rápido
     soup = BeautifulSoup(response.content, 'html.parser')
-    
+
     # O Arxiv usa listas de definição: <dl> para a lista de artigos
     dl_list = soup.find('dl')
-    
+
     if not dl_list:
         print("Nenhuma lista de artigos (<dl>) encontrada. O scraping falhou.")
         return []
@@ -87,13 +90,13 @@ def scrape_arxiv(url: str) -> List[Article]:
     # Os detalhes de cada artigo estão em tags <dt> (ID) e <dd> (Detalhes)
     dt_tags = dl_list.find_all('dt')
     dd_tags = dl_list.find_all('dd')
-    
+
     if len(dt_tags) != len(dd_tags):
         print("Aviso: Número de tags <dt> e <dd> não corresponde. "
               "Os dados podem estar incompletos.")
 
     articles: List[Article] = []
-    
+
     # 3. Extração e Validação em Loop
     for dt, dd in zip(dt_tags, dd_tags, strict=True): # Corrigido B905
         try:
@@ -112,7 +115,7 @@ def scrape_arxiv(url: str) -> List[Article]:
 
 def main():
     """Função principal que orquestra o scraping e a persistência."""
-    
+
     # 1. Captura de Dados
     articles = scrape_arxiv(settings.SCRAPE_URL)
 
@@ -122,11 +125,11 @@ def main():
 
     # 2. Armazenamento das Informações
     db_manager = DuckDBManager()
-    
+
     # Design Pattern: Gerenciador de Recurso (DuckDBManager)
     db_manager.insert_articles(articles)
     db_manager.close()
-    
+
     print("✨ Processo de extração e persistência concluído com sucesso.")
 
 

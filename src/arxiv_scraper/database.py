@@ -1,9 +1,13 @@
-import duckdb
-from typing import List
 from pathlib import Path
+from typing import List
+
+import duckdb
+
+from .config import settings
+
 # Importamos as classes do nosso próprio pacote
 from .models import Article
-from .config import settings
+
 
 class DuckDBManager:
     """
@@ -64,7 +68,7 @@ class DuckDBManager:
                 INSERT INTO {settings.TABLE_NAME} VALUES ({placeholders})
                 ON CONFLICT (arxiv_id) DO NOTHING;
             """
-            
+
             # Execução em massa para melhor performance
             self.conn.executemany(query, data_to_insert)
             self.conn.commit()
